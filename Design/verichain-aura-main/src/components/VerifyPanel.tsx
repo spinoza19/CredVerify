@@ -3,7 +3,6 @@ import gsap from "gsap";
 import { connectWallet, short } from "@/lib/wallet";
 import {
   requestVerification,
-  makeSimulatedResult,
   type VerificationResult,
   type VerificationRequest,
 } from "@/lib/genlayer";
@@ -30,6 +29,8 @@ export function VerifyPanel({
   });
   const [stage, setStage] = useState<Stage>("idle");
   const [connecting, setConnecting] = useState(false);
+  const [error, setError] = useState("");
+  const [notice, setNotice] = useState("");
 
   useEffect(() => {
     const ctx = gsap.context(() => {
@@ -44,18 +45,26 @@ export function VerifyPanel({
   const canSubmit =
     address && Object.values(form).every((v) => v.trim().length > 0) && stage === "idle";
 
+  const empty = { candidate_name: "", institution: "", credential_title: "", verify_url: "" };
+
   async function handleConnect() {
     setConnecting(true);
+    setError("");
     try {
       const a = await connectWallet();
       setAddress(a);
-    } catch (e) { console.error(e); }
-    finally { setConnecting(false); }
+    } catch (e: any) {
+      setError(e?.message || "Could not connect wallet.");
+    } finally {
+      setConnecting(false);
+    }
   }
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (!canSubmit || !address) return;
+    setError("");
+    setNotice("");
 
     setStage("signing");
     const stageTimers: number[] = [];
@@ -63,23 +72,28 @@ export function VerifyPanel({
     stageTimers.push(window.setTimeout(() => setStage("adjudicating"), 5600));
     stageTimers.push(window.setTimeout(() => setStage("consensus"), 9200));
 
-    let outcome: VerificationResult;
     try {
+      // Real on-chain verification only — no simulated fallback.
       const { result } = await requestVerification(address, form);
-      // Real on-chain verdict when available; simulated only as a last resort.
-      outcome = result ?? makeSimulatedResult(form, address);
-    } catch {
-      outcome = makeSimulatedResult(form, address);
-    } finally {
       stageTimers.forEach(clearTimeout);
-    }
-
-    setStage("done");
-    setTimeout(() => {
-      onNewResult(outcome);
+      setStage("done");
+      setTimeout(() => {
+        setStage("idle");
+        setForm(empty);
+        if (result) {
+          onNewResult(result);
+        } else {
+          // Accepted on-chain but not yet finalized — never fabricate a verdict.
+          setNotice(
+            "Submitted on-chain. The verdict appears in the ledger once it finalizes (~1–2 min) — reload to see it.",
+          );
+        }
+      }, 1400);
+    } catch (err: any) {
+      stageTimers.forEach(clearTimeout);
       setStage("idle");
-      setForm({ candidate_name: "", institution: "", credential_title: "", verify_url: "" });
-    }, 1400);
+      setError(err?.message || "Verification failed on-chain. Nothing was recorded.");
+    }
   }
 
   return (
@@ -151,6 +165,9 @@ export function VerifyPanel({
               >
                 {address ? "SEAL ON-CHAIN →" : "CONNECT WALLET FIRST"}
               </button>
+
+              {error && <p className="text-xs text-destructive">{error}</p>}
+              {notice && <p className="text-xs text-acid">{notice}</p>}
             </form>
           </div>
         </div>

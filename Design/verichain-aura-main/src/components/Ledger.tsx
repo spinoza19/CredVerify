@@ -141,6 +141,13 @@ function ResultCard({ r }: { r: VerificationResult }) {
           <MatchPill label="TITLE" ok={r.title_match} />
         </div>
 
+        <div className="flex items-center gap-2 font-mono text-[10px] tracking-[0.2em]">
+          <span className={r.domain_authoritative ? "text-acid" : "text-amber"}>
+            {r.domain_authoritative ? "◆ AUTHORITATIVE SOURCE" : "◇ UNVERIFIED SOURCE"}
+          </span>
+          <span className="text-muted-foreground truncate">· {r.issuer_domain}</span>
+        </div>
+
         <p className="text-sm text-bone/80 leading-relaxed border-l-2 pl-4" style={{ borderColor: v.color }}>
           {r.summary}
         </p>

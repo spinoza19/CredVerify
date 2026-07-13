@@ -8,11 +8,10 @@ export function short(addr: string) {
 export async function connectWallet(): Promise<string> {
   const eth = (window as any).ethereum;
   if (!eth) {
-    // Fake connect for preview when no wallet is installed
-    const mock = "0x" + Math.random().toString(16).slice(2, 42).padEnd(40, "0");
-    return mock;
+    throw new Error("No EVM wallet found. Install MetaMask to connect.");
   }
   const accounts: string[] = await eth.request({ method: "eth_requestAccounts" });
+  if (!accounts?.[0]) throw new Error("No account returned from the wallet.");
   await ensureBradbury();
   return accounts[0];
 }

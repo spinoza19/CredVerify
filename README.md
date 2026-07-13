@@ -8,7 +8,7 @@
 
 [![Network](https://img.shields.io/badge/GenLayer-Bradbury_Testnet-9AE600?style=flat-square)](https://explorer-bradbury.genlayer.com/)
 [![Chain ID](https://img.shields.io/badge/Chain_ID-4221-8B5CF6?style=flat-square)](https://rpc-bradbury.genlayer.com)
-[![Contract](https://img.shields.io/badge/Contract-0x042b…E1F0-1f2937?style=flat-square)](https://explorer-bradbury.genlayer.com/)
+[![Contract](https://img.shields.io/badge/Contract-0x233b…C9f1-1f2937?style=flat-square)](https://explorer-bradbury.genlayer.com/)
 [![License](https://img.shields.io/badge/License-MIT-blue?style=flat-square)](./LICENSE)
 
 </div>
@@ -31,6 +31,11 @@ CredVerify turns verification into a single on-chain call. The Intelligent Contr
 ## Why GenLayer?
 
 Ordinary smart contracts can't read the web or run an LLM, and a centralized API can be tampered with by whoever runs it. GenLayer's **Intelligent Contracts** combine live web access, LLM reasoning, and multi-validator consensus — enabling **trustless adjudication** of subjective claims, which is exactly what credential verification requires.
+
+## Security & integrity
+
+- **Issuer-domain binding.** Evidence is bound to authoritative sources. The contract extracts the host of every `verify_url` and, unless it belongs to a recognized issuer/platform domain or an academic TLD (`.edu`, `.ac.uk`, …), the verdict can **never** be `VALID` — it is deterministically capped at `UNCERTAIN`, independent of the LLM. A requester cannot get a page they control certified as a real credential. Each record stores `issuer_domain` and `domain_authoritative`.
+- **No mock verdicts in the production flow.** The frontend performs **only** real on-chain reads and writes. A failed or unfinalized chain call surfaces an explicit error or a "pending" state — it is never substituted with a fabricated "verified" result.
 
 ---
 
@@ -57,7 +62,7 @@ Each verdict is one of `VALID` · `INVALID` · `UNCERTAIN`, with a `LOW` / `MEDI
 | `get_verification(request_id)` | view | Returns a single record |
 | `get_total()` | view | Returns the number of verifications |
 
-**Deployed on GenLayer Bradbury Testnet:** [`0x042b5a214E0552791c40E34Ed4358DE1DB4Ee1F0`](https://explorer-bradbury.genlayer.com/)
+**Deployed on GenLayer Bradbury Testnet:** [`0x233b8d90A546e0e57934345d2939bb931eEAC9f1`](https://explorer-bradbury.genlayer.com/)
 
 ---
 
